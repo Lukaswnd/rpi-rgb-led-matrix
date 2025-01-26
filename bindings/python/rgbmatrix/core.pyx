@@ -74,10 +74,10 @@ cdef class FrameCanvas(Canvas):
         (<cppinc.FrameCanvas*>self._getCanvas()).SetPixel(x, y, red, green, blue)
     
     def SetPixels(self, int x, int y, int width, int height, Color* colors):
-        (<cppinc.FrameCanvas*>self._getCanvas()).SetPixels(x, y, width, height, colors)
+        (<cppinc.FrameCanvas*>self._getCanvas()).SetPixels(x, y, width, height, <Color*>colors)
 
     def SetPixels32(self, int x, int y, int width, int height, uint32_t** colors):
-        (<cppinc.FrameCanvas*>self._getCanvas()).SetPixels32(x, y, width, height, colors)
+        (<cppinc.FrameCanvas*>self._getCanvas()).SetPixels32(x, y, width, height, <uint32_t**>colors)
 
 
     property width:
@@ -247,10 +247,12 @@ cdef class RGBMatrix(Canvas):
         self.__matrix.SetPixel(x, y, red, green, blue)
     
     def SetPixels(self, int x, int y, int width, int height, Color* colors):
-        self.__matrix.SetPixels(x, y, width, height, colors)
+        cdef Color* cols = colors
+        self.__matrix.SetPixels(x, y, width, height, cols)
 
     def SetPixels32(self, int x, int y, int width, int height, uint32_t** colors):
-        self.__matrix.SetPixels32(x, y, width, height, colors)
+        cdef uint32_t** cols = colors
+        self.__matrix.SetPixels32(x, y, width, height, cols)
 
     def Clear(self):
         self.__matrix.Clear()
