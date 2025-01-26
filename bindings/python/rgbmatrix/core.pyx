@@ -76,7 +76,7 @@ cdef class FrameCanvas(Canvas):
     def SetPixels(self, int x, int y, int width, int height, Color* colors):
         (<cppinc.FrameCanvas*>self._getCanvas()).SetPixels(x, y, width, height, colors)
 
-    def SetPixels32(self, int x, int y, int width, int height, uint32_t* colors):
+    def SetPixels32(self, int x, int y, int width, int height, uint32_t** colors):
         (<cppinc.FrameCanvas*>self._getCanvas()).SetPixels32(x, y, width, height, colors)
 
 
@@ -249,7 +249,7 @@ cdef class RGBMatrix(Canvas):
     def SetPixels(self, int x, int y, int width, int height, Color* colors):
         self.__matrix.SetPixels(x, y, width, height, colors)
 
-    def SetPixels32(self, int x, int y, int width, int height, uint32_t* colors):
+    def SetPixels32(self, int x, int y, int width, int height, uint32_t** colors):
         self.__matrix.SetPixels32(x, y, width, height, colors)
 
     def Clear(self):
