@@ -4,7 +4,7 @@ from libcpp cimport bool
 from libc.stdint cimport uint8_t, uint32_t, uintptr_t
 import cython
 
-from .cppinc import Color
+from .cppinc cimport Color
 
 cdef class Canvas:
     cdef cppinc.Canvas* _getCanvas(self) except *:
