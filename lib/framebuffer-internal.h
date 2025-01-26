@@ -128,6 +128,7 @@ public:
   int height() const;
   void SetPixel(int x, int y, uint8_t red, uint8_t green, uint8_t blue);
   void SetPixels(int x, int y, int width, int height, Color *colors);
+  virtual void SetPixels32(int x, int y, int width, int height, uint32_t** colors);
   void Clear();
   void Fill(uint8_t red, uint8_t green, uint8_t blue);
 

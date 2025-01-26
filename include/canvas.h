@@ -18,6 +18,9 @@
 #include <stdint.h>
 
 namespace rgb_matrix {
+
+class Color;
+
 // An interface for things a Canvas can do. The RGBMatrix implements this
 // interface, so you can use it directly wherever a canvas is needed.
 //
@@ -40,6 +43,8 @@ public:
   // Each color is 8 bit (24bpp), 0 black, 255 brightest.
   virtual void SetPixel(int x, int y,
                         uint8_t red, uint8_t green, uint8_t blue) = 0;
+  virtual void SetPixels(int x, int y, int width, int height, Color* colors) = 0;
+  virtual void SetPixels32(int x, int y, int width, int height, uint32_t** colors) = 0;
 
   // Clear screen to be all black.
   virtual void Clear() = 0;

@@ -4,6 +4,8 @@ from libcpp cimport bool
 from libc.stdint cimport uint8_t, uint32_t, uintptr_t
 import cython
 
+from .cppinc import Color
+
 cdef class Canvas:
     cdef cppinc.Canvas* _getCanvas(self) except *:
         raise Exception("Not implemented")
@@ -70,6 +72,12 @@ cdef class FrameCanvas(Canvas):
 
     def SetPixel(self, int x, int y, uint8_t red, uint8_t green, uint8_t blue):
         (<cppinc.FrameCanvas*>self._getCanvas()).SetPixel(x, y, red, green, blue)
+    
+    def SetPixels(self, int x, int y, int width, int height, Color* colors):
+        (<cppinc.FrameCanvas*>self._getCanvas()).SetPixels(x, y, width, height, colors)
+
+    def SetPixels32(self, int x, int y, int width, int height, uint32_t* colors):
+        (<cppinc.FrameCanvas*>self._getCanvas()).SetPixels32(x, y, width, height, colors)
 
 
     property width:
@@ -237,6 +245,12 @@ cdef class RGBMatrix(Canvas):
 
     def SetPixel(self, int x, int y, uint8_t red, uint8_t green, uint8_t blue):
         self.__matrix.SetPixel(x, y, red, green, blue)
+    
+    def SetPixels(self, int x, int y, int width, int height, Color* colors):
+        self.__matrix.SetPixels(x, y, width, height, colors)
+
+    def SetPixels32(self, int x, int y, int width, int height, uint32_t* colors):
+        self.__matrix.SetPixels32(x, y, width, height, colors)
 
     def Clear(self):
         self.__matrix.Clear()

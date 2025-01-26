@@ -702,6 +702,19 @@ void Framebuffer::SetPixels(int x, int y, int width, int height, Color *colors) 
     }
   }
 }
+
+void Framebuffer::SetPixels32(int x, int y, int width, int height, uint32_t **colors) {
+  for (int iy = 0; iy < height; ++iy) {
+    for (int ix = 0; ix < width; ++ix) {
+      uint32_t color =  colors[iy][ix];
+      uint8_t r = (color) & 0xFF;
+      uint8_t g = (color >> 8) & 0xFF;
+      uint8_t b = (color >> 16) & 0xFF;
+      SetPixel(x + ix, y + iy, r, g, b);
+      ++colors;
+    }
+  }
+}
 // Strange LED-mappings such as RBG or so are handled here.
 gpio_bits_t Framebuffer::GetGpioFromLedSequence(char col,
                                                 const char *led_sequence,

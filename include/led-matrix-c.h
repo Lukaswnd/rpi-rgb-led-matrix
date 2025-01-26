@@ -327,6 +327,10 @@ void led_canvas_set_pixel(struct LedCanvas *canvas, int x, int y,
 void led_canvas_set_pixels(struct LedCanvas *canvas, int x, int y,
                            int width, int height, struct Color *colors);
 
+/** Copies pixels to rectangle at (x, y) with size (width, height). */
+void led_canvas_set_pixels32(struct LedCanvas *canvas, int x, int y,
+                           int width, int height, uint32_t **colors);
+
 /** Clear screen (black). */
 void led_canvas_clear(struct LedCanvas *canvas);
 
