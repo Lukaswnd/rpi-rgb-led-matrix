@@ -772,6 +772,10 @@ void RGBMatrix::SetPixels32(int x, int y, int width, int height, uint32_t **colo
   impl_->active_->SetPixels32(x, y, width, height, colors);
 }
 
+void RGBMatrix::SetPixelBytes(int x, int y, int width, int height, uintt_t *bytes) {
+  impl_->active_->SetPixelBytes(x, y, width, height, bytes);
+}
+
 void RGBMatrix::Clear() {
   impl_->active_->Clear();
 }
