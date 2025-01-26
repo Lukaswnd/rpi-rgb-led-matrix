@@ -88,7 +88,7 @@ cdef class Canvas:
         y = max(0, -ystart) + ystart
         w = min(width, frame_width-xstart) + xstart
         h = min(height, frame_height-ystart) + ystart
-        my_canvas.SetPixels32(x, y, w, h, image_bytes)
+        my_canvas.SetPixelBytes(x, y, w, h, image_bytes)
 
 
 cdef class FrameCanvas(Canvas):
