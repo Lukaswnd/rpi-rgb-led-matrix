@@ -703,19 +703,6 @@ void Framebuffer::SetPixels(int x, int y, int width, int height, Color *colors) 
   }
 }
 
-void Framebuffer::SetPixels32(int x, int y, int width, int height, uint32_t **colors_) {
-  uint32_t* colors = (uint32_t*) colors_;
-  for (int iy = 0; iy < height; ++iy) {
-    for (int ix = 0; ix < width; ++ix) {
-      uint32_t color =  colors[(iy*width) + ix];
-      uint8_t r = (color) & 0xFF;
-      uint8_t g = (color >> 8) & 0xFF;
-      uint8_t b = (color >> 16) & 0xFF;
-      SetPixel(x + ix, y + iy, r, g, b);
-    }
-  }
-}
-
 void Framebuffer::SetPixelBytes(int x, int y, int width, int height, uint8_t *bytes) {
   for (int iy = 0; iy < height; ++iy) {
     for (int ix = 0; ix < width; ++ix) {

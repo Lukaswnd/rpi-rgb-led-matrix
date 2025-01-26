@@ -768,10 +768,6 @@ void RGBMatrix::SetPixels(int x, int y, int width, int height, Color *colors) {
   impl_->active_->SetPixels(x, y, width, height, colors);
 }
 
-void RGBMatrix::SetPixels32(int x, int y, int width, int height, uint32_t **colors) {
-  impl_->active_->SetPixels32(x, y, width, height, colors);
-}
-
 void RGBMatrix::SetPixelBytes(int x, int y, int width, int height, uint8_t *bytes) {
   impl_->active_->SetPixelBytes(x, y, width, height, bytes);
 }
@@ -795,10 +791,6 @@ void FrameCanvas::SetPixel(int x, int y,
 void FrameCanvas::SetPixels(int x, int y, int width, int height,
                          Color *colors) {
   frame_->SetPixels(x, y, width, height, colors);
-}
-void FrameCanvas::SetPixels32(int x, int y, int width, int height,
-                         uint32_t **colors) {
-  frame_->SetPixels32(x, y, width, height, colors);
 }
 void FrameCanvas::SetPixelBytes(int x, int y, int width, int height, uint8_t* bytes){
   frame_->SetPixelBytes(x, y, width, height, bytes);

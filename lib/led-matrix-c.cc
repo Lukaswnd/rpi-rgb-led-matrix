@@ -234,11 +234,6 @@ void led_canvas_set_pixels(struct LedCanvas *canvas, int x, int y,
   to_canvas(canvas)->SetPixels(x, y, width, height, to_color(colors));
 }
 
-void led_canvas_set_pixels32(struct LedCanvas *canvas, int x, int y,
-  int width, int height, uint32_t **colors){
-  to_canvas(canvas)->SetPixels32(x, y, width, height, colors);
-}
-
 void led_canvas_set_pixel_bytes(struct LedCanvas* canvas, int x, int y,
   int width, int height, uint8_t* bytes){
   to_canvas(canvas)->SetPixelBytes(x, y, width, height, bytes);
