@@ -797,7 +797,7 @@ void FrameCanvas::SetPixels32(int x, int y, int width, int height,
   frame_->SetPixels32(x, y, width, height, colors);
 }
 void FrameCanvas::SetPixelBytes(int x, int y, int width, int height, uint8_t* bytes){
-  frame_->SetPixelsBytes(x, y, width, height, bytes);
+  frame_->SetPixelBytes(x, y, width, height, bytes);
 }
 void FrameCanvas::Clear() { return frame_->Clear(); }
 void FrameCanvas::Fill(uint8_t red, uint8_t green, uint8_t blue) {
