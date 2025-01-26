@@ -768,8 +768,8 @@ void RGBMatrix::SetPixels(int x, int y, int width, int height, Color *colors) {
   impl_->active_->SetPixels(x, y, width, height, colors);
 }
 
-void RGBMatrix::SetPixel32(int x, int y, int width, int height, uint32_t **colors) {
-  impl_->active_->SetPixel32(x, y, width, height, colors);
+void RGBMatrix::SetPixels32(int x, int y, int width, int height, uint32_t **colors) {
+  impl_->active_->SetPixels32(x, y, width, height, colors);
 }
 
 void RGBMatrix::Clear() {
