@@ -72,6 +72,24 @@ cdef class Canvas:
         h = min(height, frame_height-ystart) + ystart
         my_canvas.SetPixels32(x, y, w, h, image_ptr)
 
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
+    def SetPixelsPillow3(self, int xstart, int ystart, int width, int height, image):
+        cdef cppinc.FrameCanvas* my_canvas = <cppinc.FrameCanvas*>self._getCanvas()
+        cdef int frame_width = my_canvas.width()
+        cdef int frame_height = my_canvas.height()
+        cdef uint8_t *image_bytes
+
+        image.load()
+        bytes = image.tobytes()
+        image_bytes = <uint8_t *>bytes
+
+        x = max(0, -xstart) + xstart
+        y = max(0, -ystart) + ystart
+        w = min(width, frame_width-xstart) + xstart
+        h = min(height, frame_height-ystart) + ystart
+        my_canvas.SetPixels32(x, y, w, h, image_bytes)
+
 
 cdef class FrameCanvas(Canvas):
     def __dealloc__(self):

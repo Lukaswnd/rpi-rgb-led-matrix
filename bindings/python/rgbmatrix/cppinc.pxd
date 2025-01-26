@@ -12,6 +12,7 @@ cdef extern from "canvas.h" namespace "rgb_matrix":
         void SetPixel(int, int, uint8_t, uint8_t, uint8_t) nogil
         void SetPixels(int, int, int, int, Color*) nogil
         void SetPixels32(int, int, int, int, uint32_t**) nogil
+        void SetPixelBytes(int, int, int, int, uint8_t*) nogil
         void Clear() nogil
         void Fill(uint8_t, uint8_t, uint8_t) nogil
 

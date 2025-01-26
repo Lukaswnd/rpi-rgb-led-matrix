@@ -45,6 +45,7 @@ public:
                         uint8_t red, uint8_t green, uint8_t blue) = 0;
   virtual void SetPixels(int x, int y, int width, int height, Color* colors) = 0;
   virtual void SetPixels32(int x, int y, int width, int height, uint32_t** colors) = 0;
+  virtual void SetPixelBytes(int x, int y, int width, int height, uint8_t* bytes) = 0;
 
   // Clear screen to be all black.
   virtual void Clear() = 0;
