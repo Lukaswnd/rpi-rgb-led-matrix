@@ -711,7 +711,6 @@ void Framebuffer::SetPixels32(int x, int y, int width, int height, uint32_t **co
       uint8_t g = (color >> 8) & 0xFF;
       uint8_t b = (color >> 16) & 0xFF;
       SetPixel(x + ix, y + iy, r, g, b);
-      ++colors;
     }
   }
 }
