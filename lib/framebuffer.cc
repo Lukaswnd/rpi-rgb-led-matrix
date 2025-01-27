@@ -709,7 +709,7 @@ void SetPixelRow(Framebuffer* This, int x, int startY, int width, int height, ui
     for (int ix = 0; ix < width; ++ix) {
         uint8_t r = bytes[0];
         uint8_t g = bytes[1];
-        uint8_t b = bytes[2];
+        uint8_t b = 0;//bytes[2];
         This->SetPixel(x + ix, startY, r, g, b);
         bytes += 3;
     }
