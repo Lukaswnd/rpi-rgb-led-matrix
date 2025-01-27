@@ -34,6 +34,79 @@
 #include "gpio.h"
 #include "../include/graphics.h"
 
+#include <thread>
+#include <vector>
+#include <queue>
+#include <mutex>
+#include <condition_variable>
+#include <functional>
+#include <atomic>
+
+class ThreadPool {
+public:
+    ThreadPool(size_t worker_count);
+    ~ThreadPool();
+    void enqueue(std::function<void()> task);
+
+private:
+    std::vector<std::thread> workers;
+    std::queue<std::function<void()>> tasks;
+    std::mutex queue_mutex;
+    std::condition_variable condition;
+    std::atomic<bool> stop;
+
+    void worker();
+};
+
+ThreadPool::ThreadPool(size_t worker_count) : stop(false) {
+    for (size_t i = 0; i < worker_count; ++i) {
+        workers.emplace_back(&ThreadPool::worker, this);
+    }
+}
+
+ThreadPool::~ThreadPool() {
+    stop = true;
+    condition.notify_all();
+    for (std::thread &worker : workers) {
+        worker.join();
+    }
+}
+
+void ThreadPool::enqueue(std::function<void()> task) {
+    {
+        std::unique_lock<std::mutex> lock(queue_mutex);
+        tasks.push(std::move(task));
+    }
+    condition.notify_one();
+}
+
+void ThreadPool::worker() {
+    while (true) {
+        std::function<void()> task;
+        {
+            std::unique_lock<std::mutex> lock(queue_mutex);
+            condition.wait(lock, [this] { return stop || !tasks.empty(); });
+            if (stop && tasks.empty()) return;
+            task = std::move(tasks.front());
+            tasks.pop();
+        }
+        task();
+    }
+}
+
+void SetPixelRow(rgb_matrix::internal::Framebuffer* This, int x, int startY, int width, uint8_t *bytes, int row_count) {
+    for (int iy = 0; iy < row_count; ++iy) {
+        for (int ix = 0; ix < width; ++ix) {
+            uint8_t r = bytes[0];
+            uint8_t g = bytes[1];
+            uint8_t b = bytes[2];
+            This->SetPixel(x + ix, startY + iy, r, g, b);
+            bytes += 3;
+        }
+    }
+}
+
+
 namespace rgb_matrix {
 namespace internal {
 // We need one global instance of a timing correct pulser. There are different
@@ -705,25 +778,21 @@ void Framebuffer::SetPixels(int x, int y, int width, int height, Color *colors) 
   }
 }
 
-void SetPixelRow(Framebuffer* This, int x, int startY, int width, int height, uint8_t *bytes) {
-    for (int ix = 0; ix < width; ++ix) {
-        uint8_t r = bytes[0];
-        uint8_t g = bytes[1];
-        uint8_t b = 0;//bytes[2];
-        This->SetPixel(x + ix, startY, r, g, b);
-        bytes += 3;
-    }
-}
-
 void Framebuffer::SetPixelBytes(int x, int y, int width, int height, uint8_t *bytes) {
-    std::vector<std::thread> threads;
+    static uint8_t worker_count = 3;
+    static ThreadPool pool(3);
 
-    for (int iy = 0; iy < height; ++iy) {
-        threads.emplace_back(SetPixelRow, this, x, y + iy, width, height, bytes + iy * width * 3);
-    }
+    int rows_per_worker = height / worker_count;
+    int remaining_rows = height % worker_count;
 
-    for (auto &thread : threads) {
-        thread.join();
+    int start_row = 0;
+
+    for (size_t i = 0; i < worker_count; ++i) {
+        int current_rows = rows_per_worker + (i < remaining_rows ? 1 : 0); // Distribute remaining rows
+        pool.enqueue([=] {
+            SetPixelRow(this, x, start_row, width, (uint8_t*)(bytes + (start_row * width * 3)), current_rows);
+        });
+        start_row += current_rows; // Update start_row for the next worker
     }
 }
 
