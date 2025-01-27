@@ -768,22 +768,10 @@ void Framebuffer::SetPixel(int x, int y, uint8_t r, uint8_t g, uint8_t b) {
   }
 }
 
-void Framebuffer::SetPixels(int x, int y, int width, int height, Color *colors) {
-  for (int iy = 0; iy < height; ++iy) {
-    for (int ix = 0; ix < width; ++ix) {
-      SetPixel(x + ix, y + iy, colors->r, colors->g, colors->b);
-      ++colors;
-    }
-  }
-}
 
 void Framebuffer::SetPixelBytes(int x, int y, int width, int height, uint8_t *bytes) {
     static uint8_t worker_count = 3;
     static ThreadPool pool(3);
-    static std::vector<uint8_t> data;
-    data.resize(width*height);
-    std::memcpy((void*)data.data(), bytes, data.size());
-
 
     int rows_per_worker = height / worker_count;
     int remaining_rows = height % worker_count;
@@ -792,9 +780,19 @@ void Framebuffer::SetPixelBytes(int x, int y, int width, int height, uint8_t *by
 
     for (size_t i = 0; i < worker_count; ++i) {
         int current_rows = rows_per_worker + (i < remaining_rows ? 1 : 0); // Distribute remaining rows
+
+        // Calculate the size of the data for the current worker
+        size_t data_size = current_rows * width * 3;
+        uint8_t *worker_data = new uint8_t[data_size];
+
+        // Copy the relevant portion of bytes for this worker
+        std::memcpy(worker_data, bytes + start_row * width * 3, data_size);
+
         pool.enqueue([=] {
-            SetPixelRow(this, x, start_row, width, (uint8_t*)(data.data() + (start_row * width * 3)), current_rows);
+            SetPixelRow(this, x, start_row, width, worker_data, current_rows);
+            delete[] worker_data; // Free allocated memory after processing
         });
+
         start_row += current_rows; // Update start_row for the next worker
     }
 }
