@@ -27,13 +27,12 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <thread>
-#include <vector>
 #include <algorithm>
 
 #include "gpio.h"
 #include "../include/graphics.h"
 
+#include <cstring>
 #include <thread>
 #include <vector>
 #include <queue>
@@ -781,6 +780,10 @@ void Framebuffer::SetPixels(int x, int y, int width, int height, Color *colors) 
 void Framebuffer::SetPixelBytes(int x, int y, int width, int height, uint8_t *bytes) {
     static uint8_t worker_count = 3;
     static ThreadPool pool(3);
+    static std::vector<uint8_t> data;
+    data.resize(width*height);
+    std::memcpy((void*)data.data(), bytes, data.size());
+
 
     int rows_per_worker = height / worker_count;
     int remaining_rows = height % worker_count;
@@ -790,7 +793,7 @@ void Framebuffer::SetPixelBytes(int x, int y, int width, int height, uint8_t *by
     for (size_t i = 0; i < worker_count; ++i) {
         int current_rows = rows_per_worker + (i < remaining_rows ? 1 : 0); // Distribute remaining rows
         pool.enqueue([=] {
-            SetPixelRow(this, x, start_row, width, (uint8_t*)(bytes + (start_row * width * 3)), current_rows);
+            SetPixelRow(this, x, start_row, width, (uint8_t*)(data.data() + (start_row * width * 3)), current_rows);
         });
         start_row += current_rows; // Update start_row for the next worker
     }
