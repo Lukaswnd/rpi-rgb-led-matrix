@@ -27,6 +27,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <thread>
+#include <vector>
 #include <algorithm>
 
 #include "gpio.h"
@@ -703,16 +705,26 @@ void Framebuffer::SetPixels(int x, int y, int width, int height, Color *colors) 
   }
 }
 
-void Framebuffer::SetPixelBytes(int x, int y, int width, int height, uint8_t *bytes) {
-  for (int iy = 0; iy < height; ++iy) {
+void SetPixelRow(Framebuffer* This, int x, int startY, int width, int height, uint8_t *bytes) {
     for (int ix = 0; ix < width; ++ix) {
-      uint8_t r = bytes[0];
-      uint8_t g = bytes[1];
-      uint8_t b = bytes[2];
-      SetPixel(x + ix, y + iy, r, g, b);
-      bytes += 3;
+        uint8_t r = bytes[0];
+        uint8_t g = bytes[1];
+        uint8_t b = bytes[2];
+        This->SetPixel(x + ix, startY, r, g, b);
+        bytes += 3;
     }
-  }
+}
+
+void Framebuffer::SetPixelBytes(int x, int y, int width, int height, uint8_t *bytes) {
+    std::vector<std::thread> threads;
+
+    for (int iy = 0; iy < height; ++iy) {
+        threads.emplace_back(SetPixelRow, this, x, y + iy, width, height, bytes + iy * width * 3);
+    }
+
+    for (auto &thread : threads) {
+        thread.join();
+    }
 }
 
 // Strange LED-mappings such as RBG or so are handled here.
