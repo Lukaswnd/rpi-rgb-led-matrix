@@ -46,6 +46,7 @@ public:
     ThreadPool(size_t worker_count);
     ~ThreadPool();
     void enqueue(std::function<void()> task);
+    void waitUntilDone(); // New method to wait for all tasks to finish
 
 private:
     std::vector<std::thread> workers;
@@ -53,11 +54,14 @@ private:
     std::mutex queue_mutex;
     std::condition_variable condition;
     std::atomic<bool> stop;
+    std::mutex task_mutex; // Mutex for task completion
+    std::condition_variable task_condition; // Condition variable for task completion
+    std::atomic<int> active_tasks; // Count of active tasks
 
     void worker();
 };
 
-ThreadPool::ThreadPool(size_t worker_count) : stop(false) {
+ThreadPool::ThreadPool(size_t worker_count) : stop(false), active_tasks(0) {
     for (size_t i = 0; i < worker_count; ++i) {
         workers.emplace_back(&ThreadPool::worker, this);
     }
@@ -75,6 +79,7 @@ void ThreadPool::enqueue(std::function<void()> task) {
     {
         std::unique_lock<std::mutex> lock(queue_mutex);
         tasks.push(std::move(task));
+        active_tasks++; // Increment the count of active tasks
     }
     condition.notify_one();
 }
@@ -90,7 +95,14 @@ void ThreadPool::worker() {
             tasks.pop();
         }
         task();
+        active_tasks--; // Decrement the count of active tasks
+        task_condition.notify_all(); // Notify that a task has finished
     }
+}
+
+void ThreadPool::waitUntilDone() {
+    std::unique_lock<std::mutex> lock(task_mutex);
+    task_condition.wait(lock, [this] { return active_tasks.load() == 0; });
 }
 
 void SetPixelRow(rgb_matrix::internal::Framebuffer* This, int x, int startY, int width, uint8_t *bytes, int row_count) {
@@ -785,6 +797,8 @@ void Framebuffer::SetPixelBytes(int x, int y, int width, int height, uint8_t *by
     int remaining_rows = height % worker_count;
 
     int start_row = 0;
+
+    pool.waitUntilDone();
 
     for (size_t i = 0; i < worker_count; ++i) {
         int current_rows = rows_per_worker + (i < remaining_rows ? 1 : 0); // Distribute remaining rows
