@@ -780,7 +780,7 @@ void Framebuffer::SetPixel(int x, int y, uint8_t r, uint8_t g, uint8_t b) {
   }
 
   cur_bits = current_bits;
-  std::lock_guard<std::mutex> lock(pixel_mutex);
+  //std::lock_guard<std::mutex> lock(pixel_mutex);
   for (uint16_t i = min_bit_plane; i < kBitPlanes; ++i) {
       bits[i*columns_] = cur_bits[i*columns_];
   }
