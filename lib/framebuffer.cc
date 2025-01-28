@@ -799,8 +799,8 @@ void Framebuffer::SetPixelBytes(int x, int y, int width, int height, uint8_t *by
     int start_row = 0;
 
     if(bitplane_buffer_copy_ == nullptr)
-      bitplane_buffer_copy_ = new gpio_bits_t[buffer_size_];
-    std::memcpy(bitplane_buffer_copy_, bitplane_buffer_, buffer_size_*sizeof(gpio_bits_t));
+      bitplane_buffer_copy_ = new gpio_bits_t[buffer_size_/sizeof(gpio_bits_t)];
+    std::memcpy(bitplane_buffer_copy_, bitplane_buffer_, buffer_size_);
 
     for (size_t i = 0; i < worker_count; ++i) {
         int current_rows = rows_per_worker + (i < remaining_rows ? 1 : 0); // Distribute remaining rows
