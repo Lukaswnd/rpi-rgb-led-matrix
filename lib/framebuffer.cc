@@ -110,7 +110,7 @@ void SetPixelRow(rgb_matrix::internal::Framebuffer* This, int x, int startY, int
         for (int ix = 0; ix < width; ++ix) {
             uint8_t r = bytes[0];
             uint8_t g = bytes[1];
-            uint8_t b = 0;//bytes[2];
+            uint8_t b = bytes[2];
             This->SetPixel(x + ix, startY + iy, r, g, b);
             bytes += 3;
         }
@@ -798,8 +798,6 @@ void Framebuffer::SetPixelBytes(int x, int y, int width, int height, uint8_t *by
 
     int start_row = 0;
 
-    pool.waitUntilDone();
-
     for (size_t i = 0; i < worker_count; ++i) {
         int current_rows = rows_per_worker + (i < remaining_rows ? 1 : 0); // Distribute remaining rows
 
@@ -817,6 +815,8 @@ void Framebuffer::SetPixelBytes(int x, int y, int width, int height, uint8_t *by
 
         start_row += current_rows; // Update start_row for the next worker
     }
+
+    pool.waitUntilDone();
 }
 
 // Strange LED-mappings such as RBG or so are handled here.
