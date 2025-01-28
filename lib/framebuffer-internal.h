@@ -17,6 +17,7 @@
 
 #include <stdint.h>
 #include <stdlib.h>
+#include <mutex>
 
 #include "hardware-mapping.h"
 #include "../include/graphics.h"
