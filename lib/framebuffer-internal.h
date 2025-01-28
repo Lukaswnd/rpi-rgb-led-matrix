@@ -166,7 +166,7 @@ private:
   const size_t buffer_size_;
 
   static const uint8_t worker_count = 3;
-  std::atomic<int> tasks_completed = 0;
+  std::atomic<int> tasks_completed;
 
   // The frame-buffer is organized in bitplanes.
   // Highest level (slowest to cycle through) are double rows.

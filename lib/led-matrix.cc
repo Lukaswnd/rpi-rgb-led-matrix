@@ -20,6 +20,7 @@
 #include <pwd.h>
 #include <math.h>
 #include <pthread.h>
+#include <thread>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
