@@ -135,6 +135,7 @@ public:
 private:
   static const struct HardwareMapping *hardware_mapping_;
   static RowAddressSetter *row_setter_;
+  std::mutex pixel_mutex;
 
   // This returns the gpio-bit for given color (one of 'R', 'G', 'B'). This is
   // returning the right value in case "led_sequence" is _not_ "RGB"

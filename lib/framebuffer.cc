@@ -742,7 +742,7 @@ void Framebuffer::Fill(uint8_t r, uint8_t g, uint8_t b) {
 int Framebuffer::width() const { return (*shared_mapper_)->width(); }
 int Framebuffer::height() const { return (*shared_mapper_)->height(); }
 
-std::mutex pixel_mutex;
+
 
 void Framebuffer::SetPixel(int x, int y, uint8_t r, uint8_t g, uint8_t b) {
   const PixelDesignator *designator = (*shared_mapper_)->get(x, y);
@@ -761,29 +761,30 @@ void Framebuffer::SetPixel(int x, int y, uint8_t r, uint8_t g, uint8_t b) {
   const gpio_bits_t b_bits = designator->b_bit;
   const gpio_bits_t designator_mask = designator->mask;
 
-  
-  // Prepare final values outside the lock
-    std::vector<gpio_bits_t> final_values;
+  gpio_bits_t current_bits[kBitPlanes*columns_];
 
-    // Read current bits before locking
-    gpio_bits_t* current_bits = bits;
-
-    for (uint16_t mask = 1 << min_bit_plane; mask != 1 << kBitPlanes; mask <<= 1) {
-        gpio_bits_t color_bits = 0;
-        if (red & mask)   color_bits |= r_bits;
-        if (green & mask) color_bits |= g_bits;
-        if (blue & mask)  color_bits |= b_bits;
-
-        // Calculate the final value and store it
-        final_values.push_back((*current_bits & designator_mask) | color_bits);
-        current_bits += columns_;
-    }
-
-    // Critical section: write to bitplane_buffer_
+  {
     std::lock_guard<std::mutex> lock(pixel_mutex);
-    for (size_t i = 0; i < final_values.size(); ++i) {
-        *bits = final_values[i];
+    std::copy(bits, bits + (1 << kBitPlanes), current_bits); // Copy the 
+  }
+
+  gpio_bits_t* cur_bits = current_bits;
+
+  std::lock_guard<std::mutex> lock(pixel_mutex); // Lock the mutex
+  for (uint16_t mask = 1<<min_bit_plane; mask != 1<<kBitPlanes; mask <<=1 ) {
+    gpio_bits_t color_bits = 0;
+    if (red & mask)   color_bits |= r_bits;
+    if (green & mask) color_bits |= g_bits;
+    if (blue & mask)  color_bits |= b_bits;
+    *cur_bits = (*cur_bits & designator_mask) | color_bits;
+    cur_bits += columns_;
+  }
+
+  std::lock_guard<std::mutex> lock(pixel_mutex);
+    for (uint16_t mask = 1<<min_bit_plane; mask != 1<<kBitPlanes; mask <<=1) {
+        *bits = *cur_bits;
         bits += columns_;
+        cur_bits += columns_;
     }
 }
 
@@ -797,7 +798,7 @@ void Framebuffer::SetPixels(int x, int y, int width, int height, Color *colors) 
 }
 
 void Framebuffer::SetPixelBytes(int x, int y, int width, int height, uint8_t *bytes) {
-    static const uint8_t worker_count = 3;
+    static const uint8_t worker_count = 1;
     static ThreadPool pool(worker_count);
     std::atomic<int> tasks_completed(0);
 
