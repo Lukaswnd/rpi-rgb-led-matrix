@@ -761,21 +761,23 @@ void Framebuffer::SetPixel(int x, int y, uint8_t r, uint8_t g, uint8_t b) {
   const gpio_bits_t b_bits = designator->b_bit;
   const gpio_bits_t designator_mask = designator->mask;
 
-  gpio_bits_t* cur_bits = bitplane_buffer_copy_ + pos;
+  const gpio_bits_t* cur_bits = bitplane_buffer_copy_ + pos;
+  std::vector<gpio_bits_t> results;
+  results.reserve(pwm_bits_);
 
   for (uint16_t mask = 1<<min_bit_plane; mask != 1<<kBitPlanes; mask <<=1 ) {
     gpio_bits_t color_bits = 0;
     if (red & mask)   color_bits |= r_bits;
     if (green & mask) color_bits |= g_bits;
     if (blue & mask)  color_bits |= b_bits;
-    *cur_bits = (*cur_bits & designator_mask) | color_bits;
+    results.push_back((*cur_bits & designator_mask) | color_bits);
     cur_bits += columns_;
   }
 
   cur_bits = bitplane_buffer_copy_ + pos;
   //std::lock_guard<std::mutex> lock(pixel_mutex);
   for (uint16_t i = min_bit_plane; i < kBitPlanes; ++i) {
-      bits[i*columns_] = cur_bits[i*columns_];
+      bits[i*columns_] = results[i];
   }
 }
 
