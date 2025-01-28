@@ -17,6 +17,7 @@
 
 #include <stdint.h>
 #include <stdlib.h>
+#include <atomic>
 
 #include "hardware-mapping.h"
 #include "../include/graphics.h"

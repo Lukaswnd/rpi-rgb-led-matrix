@@ -390,6 +390,8 @@ public:
   virtual void Clear();
   virtual void Fill(uint8_t red, uint8_t green, uint8_t blue);
 
+  inline bool ready() const { return frame_->ready(); }
+
 private:
   friend class RGBMatrix;
 
