@@ -792,17 +792,11 @@ void Framebuffer::SetPixelBytes(int x, int y, int width, int height, uint8_t *by
     for (size_t i = 0; i < worker_count; ++i) {
         int current_rows = rows_per_worker + (i < remaining_rows ? 1 : 0); // Distribute remaining rows
         pool.enqueue([=, &tasks_completed] {
-            for (int j = 0; j < current_rows; ++j) {
-                int current_y = y + start_row + (j * rows_); // Calculate the current row
-                uint8_t* current_bytes = bytes + ((current_y) * width * 3); // Calculate the bytes pointer for the current row
-                for (int ix = 0; ix < width; ++ix) {
-                    uint8_t r = current_bytes[ix * 3 + 0]; // Red component
-                    uint8_t g = current_bytes[ix * 3 + 1]; // Green component
-                    uint8_t b = current_bytes[ix * 3 + 2]; // Blue component
-                    SetPixel(x + ix, current_y, r, g, b); // Set pixel in framebuffer
-                }
+            for(int j = 0; j < parallel_; ++j){
+              int y = start_row + (j*rows_);
+              SetPixelRow(this, x, y, width, (uint8_t*)(bytes + (y * width * 3)), current_rows);
             }
-            ++tasks_completed; // Increment completed task count
+            ++tasks_completed;
         });
         start_row += current_rows; // Update start_row for the next worker
     }
