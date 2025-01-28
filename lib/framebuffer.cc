@@ -768,6 +768,14 @@ void Framebuffer::SetPixel(int x, int y, uint8_t r, uint8_t g, uint8_t b) {
   }
 }
 
+void Framebuffer::SetPixels(int x, int y, int width, int height, Color *colors) {
+  for (int iy = 0; iy < height; ++iy) {
+    for (int ix = 0; ix < width; ++ix) {
+      SetPixel(x + ix, y + iy, colors->r, colors->g, colors->b);
+      ++colors;
+    }
+  }
+}
 
 void Framebuffer::SetPixelBytes(int x, int y, int width, int height, uint8_t *bytes) {
     static uint8_t worker_count = 3;
