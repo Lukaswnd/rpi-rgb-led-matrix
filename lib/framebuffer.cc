@@ -759,9 +759,9 @@ void Framebuffer::SetPixel(int x, int y, uint8_t r, uint8_t g, uint8_t b) {
   const gpio_bits_t b_bits = designator->b_bit;
   const gpio_bits_t designator_mask = designator->mask;
 
-  
+  gpio_bits_t color_bits = 0;
   for (uint16_t mask = 1<<min_bit_plane; mask != 1<<kBitPlanes; mask <<=1 ) {
-    gpio_bits_t color_bits = 0;
+    color_bits = 0;
     if (red & mask)   color_bits |= r_bits;
     if (green & mask) color_bits |= g_bits;
     if (blue & mask)  color_bits |= b_bits;
@@ -784,16 +784,18 @@ void Framebuffer::SetPixelBytes(int x, int y, int width, int height, uint8_t *by
     static ThreadPool pool(worker_count);
     std::atomic<int> tasks_completed(0);
 
-    int rows_per_worker = height / worker_count;
-    int remaining_rows = height % worker_count;
+    int rows_per_worker = rows_ / worker_count;
+    int remaining_rows = rows_ % worker_count;
 
     int start_row = 0;
 
     for (size_t i = 0; i < worker_count; ++i) {
         int current_rows = rows_per_worker + (i < remaining_rows ? 1 : 0); // Distribute remaining rows
         pool.enqueue([=, &tasks_completed] {
-            if(i == 1)
-              SetPixelRow(this, x, start_row, width, (uint8_t*)(bytes + (start_row * width * 3)), current_rows);
+            for(int j = 0; j < parallel_; ++j){
+              int y = start_row + (j*rows_);
+              SetPixelRow(this, x, y, width, (uint8_t*)(bytes + (y * width * 3)), current_rows);
+            }
             ++tasks_completed;
         });
         start_row += current_rows; // Update start_row for the next worker
