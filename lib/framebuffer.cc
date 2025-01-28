@@ -784,8 +784,9 @@ void Framebuffer::SetPixelBytes(int x, int y, int width, int height, uint8_t *by
     static ThreadPool pool(worker_count);
     std::atomic<int> tasks_completed(0);
 
-    int rows_per_worker = rows_ / worker_count;
-    int remaining_rows = rows_ % worker_count;
+    int row_repeat = rows_ / 2;
+    int rows_per_worker = row_repeat / worker_count;
+    int remaining_rows = row_repeat % worker_count;
 
     int start_row = 0;
 
@@ -793,7 +794,7 @@ void Framebuffer::SetPixelBytes(int x, int y, int width, int height, uint8_t *by
         int current_rows = rows_per_worker + (i < remaining_rows ? 1 : 0); // Distribute remaining rows
         pool.enqueue([=, &tasks_completed] {
             for(int j = 0; j < parallel_; ++j){
-              int current_y = start_row + (j*rows_);
+              int current_y = start_row + (j*row_repeat);
               SetPixelRow(this, x, current_y, width, (uint8_t*)(bytes + (current_y * width * 3)), current_rows);
             }
             ++tasks_completed;
