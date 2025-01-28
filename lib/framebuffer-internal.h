@@ -17,7 +17,6 @@
 
 #include <stdint.h>
 #include <stdlib.h>
-#include <mutex>
 
 #include "hardware-mapping.h"
 #include "../include/graphics.h"
@@ -136,7 +135,6 @@ public:
 private:
   static const struct HardwareMapping *hardware_mapping_;
   static RowAddressSetter *row_setter_;
-  std::mutex pixel_mutex;
 
   // This returns the gpio-bit for given color (one of 'R', 'G', 'B'). This is
   // returning the right value in case "led_sequence" is _not_ "RGB"
@@ -171,7 +169,6 @@ private:
   // Of course, that means that we store unrelated bits in the frame-buffer,
   // but it allows easy access in the critical section.
   gpio_bits_t *bitplane_buffer_;
-  gpio_bits_t *bitplane_buffer_copy_ = nullptr;
   inline gpio_bits_t *ValueAt(int double_row, int column, int bit);
 
   PixelDesignatorMap **shared_mapper_;  // Storage in RGBMatrix.
