@@ -742,6 +742,8 @@ void Framebuffer::Fill(uint8_t r, uint8_t g, uint8_t b) {
 int Framebuffer::width() const { return (*shared_mapper_)->width(); }
 int Framebuffer::height() const { return (*shared_mapper_)->height(); }
 
+std::mutex pixel_mutex;
+
 void Framebuffer::SetPixel(int x, int y, uint8_t r, uint8_t g, uint8_t b) {
   const PixelDesignator *designator = (*shared_mapper_)->get(x, y);
   if (designator == NULL) return;
@@ -758,6 +760,8 @@ void Framebuffer::SetPixel(int x, int y, uint8_t r, uint8_t g, uint8_t b) {
   const gpio_bits_t g_bits = designator->g_bit;
   const gpio_bits_t b_bits = designator->b_bit;
   const gpio_bits_t designator_mask = designator->mask;
+
+  std::lock_guard<std::mutex> lock(pixel_mutex); // Lock the mutex
   for (uint16_t mask = 1<<min_bit_plane; mask != 1<<kBitPlanes; mask <<=1 ) {
     gpio_bits_t color_bits = 0;
     if (red & mask)   color_bits |= r_bits;
@@ -778,7 +782,7 @@ void Framebuffer::SetPixels(int x, int y, int width, int height, Color *colors) 
 }
 
 void Framebuffer::SetPixelBytes(int x, int y, int width, int height, uint8_t *bytes) {
-    static const uint8_t worker_count = 1;
+    static const uint8_t worker_count = 3;
     static ThreadPool pool(worker_count);
     std::atomic<int> tasks_completed(0);
 
