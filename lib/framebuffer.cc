@@ -761,14 +761,7 @@ void Framebuffer::SetPixel(int x, int y, uint8_t r, uint8_t g, uint8_t b) {
   const gpio_bits_t b_bits = designator->b_bit;
   const gpio_bits_t designator_mask = designator->mask;
 
-  gpio_bits_t current_bits[kBitPlanes*columns_];
-
-  {
-    //std::lock_guard<std::mutex> lock(pixel_mutex);
-    std::memcpy(current_bits, bits, pwm_bits_*columns_ * sizeof(gpio_bits_t)); // Copy the 
-  }
-
-  gpio_bits_t* cur_bits = current_bits;
+  gpio_bits_t* cur_bits = bitplane_buffer_copy_ + pos;
 
   for (uint16_t mask = 1<<min_bit_plane; mask != 1<<kBitPlanes; mask <<=1 ) {
     gpio_bits_t color_bits = 0;
@@ -779,7 +772,7 @@ void Framebuffer::SetPixel(int x, int y, uint8_t r, uint8_t g, uint8_t b) {
     cur_bits += columns_;
   }
 
-  cur_bits = current_bits;
+  cur_bits = bitplane_buffer_copy_ + pos;
   //std::lock_guard<std::mutex> lock(pixel_mutex);
   for (uint16_t i = min_bit_plane; i < kBitPlanes; ++i) {
       bits[i*columns_] = cur_bits[i*columns_];
@@ -804,6 +797,10 @@ void Framebuffer::SetPixelBytes(int x, int y, int width, int height, uint8_t *by
     int remaining_rows = height % worker_count;
 
     int start_row = 0;
+
+    if(bitplane_buffer_copy_ == nullptr)
+      bitplane_buffer_copy_ = new gpio_bits_t[buffer_size_];
+    std::memcpy(bitplane_buffer_copy_, bitplane_buffer_, buffer_size_*sizeof(gpio_bits_t));
 
     for (size_t i = 0; i < worker_count; ++i) {
         int current_rows = rows_per_worker + (i < remaining_rows ? 1 : 0); // Distribute remaining rows
