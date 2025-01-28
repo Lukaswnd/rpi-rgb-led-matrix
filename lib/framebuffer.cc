@@ -778,8 +778,9 @@ void Framebuffer::SetPixels(int x, int y, int width, int height, Color *colors) 
 }
 
 void Framebuffer::SetPixelBytes(int x, int y, int width, int height, uint8_t *bytes) {
-    static uint8_t worker_count = 3;
-    static ThreadPool pool(3);
+    static const uint8_t worker_count = 1;
+    static ThreadPool pool(worker_count);
+    std::atomic<int> tasks_completed(0);
 
     int rows_per_worker = height / worker_count;
     int remaining_rows = height % worker_count;
@@ -788,10 +789,16 @@ void Framebuffer::SetPixelBytes(int x, int y, int width, int height, uint8_t *by
 
     for (size_t i = 0; i < worker_count; ++i) {
         int current_rows = rows_per_worker + (i < remaining_rows ? 1 : 0); // Distribute remaining rows
-        pool.enqueue([=] {
+        //pool.enqueue([=, &tasks_completed] {
             SetPixelRow(this, x, start_row, width, (uint8_t*)(bytes + (start_row * width * 3)), current_rows);
-        });
+            ++tasks_completed;
+        //});
         start_row += current_rows; // Update start_row for the next worker
+    }
+
+    // Wait for all tasks to be completed
+    while (tasks_completed < worker_count) {
+        std::this_thread::yield(); // Yield to allow other threads to run
     }
 }
 
