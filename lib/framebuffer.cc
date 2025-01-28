@@ -764,7 +764,7 @@ void Framebuffer::SetPixel(int x, int y, uint8_t r, uint8_t g, uint8_t b) {
   gpio_bits_t current_bits[kBitPlanes*columns_];
 
   {
-    std::lock_guard<std::mutex> lock(pixel_mutex);
+    //std::lock_guard<std::mutex> lock(pixel_mutex);
     std::memcpy(current_bits, bits, pwm_bits_*columns_); // Copy the 
   }
 
@@ -781,10 +781,8 @@ void Framebuffer::SetPixel(int x, int y, uint8_t r, uint8_t g, uint8_t b) {
 
   cur_bits = current_bits;
   std::lock_guard<std::mutex> lock(pixel_mutex);
-  for (uint16_t mask = 1<<min_bit_plane; mask != 1<<kBitPlanes; mask <<=1) {
-      *bits = *cur_bits;
-      bits += columns_;
-      cur_bits += columns_;
+  for (uint16_t i = min_bit_plane; i < kBitPlanes; ++i) {
+      bits[i*columns_] = cur_bits[i*columns_];
   }
 }
 
