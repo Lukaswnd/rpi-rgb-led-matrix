@@ -793,7 +793,7 @@ void Framebuffer::SetPixelBytes(int x, int y, int width, int height, uint8_t *by
     for (size_t i = 0; i < worker_count; ++i) {
         int current_rows = rows_per_worker + (i < remaining_rows ? 1 : 0); // Distribute remaining rows
         pool.enqueue([=, &tasks_completed] {
-            for(int j = 0; j < parallel_; ++j){
+            for(int j = 0; j < parallel_*2; ++j){
               int current_y = start_row + (j*row_repeat);
               SetPixelRow(this, x, current_y, width, (uint8_t*)(bytes + (current_y * width * 3)), current_rows);
             }
