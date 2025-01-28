@@ -46,7 +46,6 @@ public:
     ThreadPool(size_t worker_count);
     ~ThreadPool();
     void enqueue(std::function<void()> task);
-    void waitUntilDone(); // New method to wait for all tasks to finish
 
 private:
     std::vector<std::thread> workers;
@@ -54,14 +53,11 @@ private:
     std::mutex queue_mutex;
     std::condition_variable condition;
     std::atomic<bool> stop;
-    std::mutex task_mutex; // Mutex for task completion
-    std::condition_variable task_condition; // Condition variable for task completion
-    std::atomic<int> active_tasks; // Count of active tasks
 
     void worker();
 };
 
-ThreadPool::ThreadPool(size_t worker_count) : stop(false), active_tasks(0) {
+ThreadPool::ThreadPool(size_t worker_count) : stop(false) {
     for (size_t i = 0; i < worker_count; ++i) {
         workers.emplace_back(&ThreadPool::worker, this);
     }
@@ -79,7 +75,6 @@ void ThreadPool::enqueue(std::function<void()> task) {
     {
         std::unique_lock<std::mutex> lock(queue_mutex);
         tasks.push(std::move(task));
-        active_tasks++; // Increment the count of active tasks
     }
     condition.notify_one();
 }
@@ -95,14 +90,7 @@ void ThreadPool::worker() {
             tasks.pop();
         }
         task();
-        active_tasks--; // Decrement the count of active tasks
-        task_condition.notify_all(); // Notify that a task has finished
     }
-}
-
-void ThreadPool::waitUntilDone() {
-    std::unique_lock<std::mutex> lock(task_mutex);
-    task_condition.wait(lock, [this] { return active_tasks.load() == 0; });
 }
 
 void SetPixelRow(rgb_matrix::internal::Framebuffer* This, int x, int startY, int width, uint8_t *bytes, int row_count) {
@@ -790,7 +778,7 @@ void Framebuffer::SetPixels(int x, int y, int width, int height, Color *colors) 
 }
 
 void Framebuffer::SetPixelBytes(int x, int y, int width, int height, uint8_t *bytes) {
-    static size_t worker_count = 3;
+    static uint8_t worker_count = 3;
     static ThreadPool pool(3);
 
     int rows_per_worker = height / worker_count;
@@ -798,21 +786,13 @@ void Framebuffer::SetPixelBytes(int x, int y, int width, int height, uint8_t *by
 
     int start_row = 0;
 
-    pool.waitUntilDone();
     for (size_t i = 0; i < worker_count; ++i) {
         int current_rows = rows_per_worker + (i < remaining_rows ? 1 : 0); // Distribute remaining rows
-
-        // Copy the relevant portion of bytes for this worker
-        uint8_t* worker_data = (uint8_t*)(bytes + (start_row * width * 3));
-
         pool.enqueue([=] {
-            SetPixelRow(this, x, start_row, width, worker_data, current_rows);
+            SetPixelRow(this, x, start_row, width, (uint8_t*)(bytes + (start_row * width * 3)), current_rows);
         });
-
         start_row += current_rows; // Update start_row for the next worker
     }
-
-    pool.waitUntilDone();
 }
 
 // Strange LED-mappings such as RBG or so are handled here.
