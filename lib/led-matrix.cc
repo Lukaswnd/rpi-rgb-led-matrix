@@ -230,6 +230,8 @@ public:
   FrameCanvas *SwapOnVSync(FrameCanvas *other, unsigned frame_fraction) {
     MutexLock l(&frame_sync_);
     FrameCanvas *previous = current_frame_;
+    while(!other->ready())
+      std::this_thread::yield();
     next_frame_ = other;
     requested_frame_multiple_ = frame_fraction;
     frame_sync_.WaitOn(&frame_done_);

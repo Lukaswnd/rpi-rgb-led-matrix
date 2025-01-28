@@ -132,6 +132,8 @@ public:
   void Clear();
   void Fill(uint8_t red, uint8_t green, uint8_t blue);
 
+  bool ready() const;
+
 private:
   static const struct HardwareMapping *hardware_mapping_;
   static RowAddressSetter *row_setter_;
@@ -161,6 +163,9 @@ private:
 
   const int double_rows_;
   const size_t buffer_size_;
+
+  static const uint8_t worker_count = 3;
+  std::atomic<int> tasks_completed = 0;
 
   // The frame-buffer is organized in bitplanes.
   // Highest level (slowest to cycle through) are double rows.

@@ -780,19 +780,19 @@ void Framebuffer::SetPixels(int x, int y, int width, int height, Color *colors) 
 }
 
 void Framebuffer::SetPixelBytes(int x, int y, int width, int height, uint8_t *bytes) {
-    static const uint8_t worker_count = 3;
     static ThreadPool pool(worker_count);
-    std::atomic<int> tasks_completed(0);
+    
 
     int row_repeat = rows_ / 2;
     int rows_per_worker = row_repeat / worker_count;
     int remaining_rows = row_repeat % worker_count;
 
     int start_row = 0;
+    tasks_completed = 0;
 
     for (size_t i = 0; i < worker_count; ++i) {
         int current_rows = rows_per_worker + (i < remaining_rows ? 1 : 0); // Distribute remaining rows
-        pool.enqueue([=, &tasks_completed] {
+        pool.enqueue([=] {
             for(int j = 0; j < parallel_*2; ++j){
               int current_y = start_row + (j*row_repeat);
               SetPixelRow(this, x, current_y, width, (uint8_t*)(bytes + (current_y * width * 3)), current_rows);
@@ -803,9 +803,13 @@ void Framebuffer::SetPixelBytes(int x, int y, int width, int height, uint8_t *by
     }
 
     // Wait for all tasks to be completed
-    while (tasks_completed < worker_count) {
-        std::this_thread::yield(); // Yield to allow other threads to run
-    }
+    //while (tasks_completed < worker_count) {
+    //    std::this_thread::yield(); // Yield to allow other threads to run
+    //}
+}
+
+bool Framebuffer::ready() const {
+  return tasks_completed >= worker_count;
 }
 
 // Strange LED-mappings such as RBG or so are handled here.
