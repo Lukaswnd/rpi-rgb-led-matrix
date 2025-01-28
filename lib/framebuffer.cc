@@ -796,7 +796,7 @@ void Framebuffer::SetPixels(int x, int y, int width, int height, Color *colors) 
 }
 
 void Framebuffer::SetPixelBytes(int x, int y, int width, int height, uint8_t *bytes) {
-    static const uint8_t worker_count = 1;
+    static const uint8_t worker_count = 3;
     static ThreadPool pool(worker_count);
     std::atomic<int> tasks_completed(0);
 
