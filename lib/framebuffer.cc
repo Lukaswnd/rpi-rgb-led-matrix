@@ -793,8 +793,8 @@ void Framebuffer::SetPixelBytes(int x, int y, int width, int height, uint8_t *by
         int current_rows = rows_per_worker + (i < remaining_rows ? 1 : 0); // Distribute remaining rows
         pool.enqueue([=, &tasks_completed] {
             for(int j = 0; j < parallel_; ++j){
-              int y = start_row + (j*rows_);
-              SetPixelRow(this, x, y, width, (uint8_t*)(bytes + (y * width * 3)), current_rows);
+              int current_y = start_row + (j*rows_);
+              SetPixelRow(this, x, current_y, width, (uint8_t*)(bytes + (y * width * 3)), current_rows);
             }
             ++tasks_completed;
         });
@@ -802,9 +802,9 @@ void Framebuffer::SetPixelBytes(int x, int y, int width, int height, uint8_t *by
     }
 
     // Wait for all tasks to be completed
-    //while (tasks_completed < worker_count) {
-    //    std::this_thread::yield(); // Yield to allow other threads to run
-    //}
+    while (tasks_completed < worker_count) {
+        std::this_thread::yield(); // Yield to allow other threads to run
+    }
 }
 
 // Strange LED-mappings such as RBG or so are handled here.
